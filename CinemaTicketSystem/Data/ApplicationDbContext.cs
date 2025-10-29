@@ -15,6 +15,7 @@ namespace CinemaTicketSystem.Data
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Screening> Screenings { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Seat> Seats { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -35,6 +36,12 @@ namespace CinemaTicketSystem.Data
             modelBuilder.Entity<Booking>()
                 .Property(b => b.TotalPrice)
                 .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Seat>()
+                .HasOne(s => s.Booking)
+                .WithMany(b => b.Seats)
+                .HasForeignKey(s => s.BookingId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Seed Admin User
             var adminUser = new ApplicationUser

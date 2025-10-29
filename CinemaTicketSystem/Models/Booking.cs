@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,10 +23,6 @@ namespace CinemaTicketSystem.Models
         public Screening? Screening { get; set; }
 
         [Required]
-        [Range(1, 100)]
-        public int NumberOfSeats { get; set; }
-
-        [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
 
@@ -33,5 +30,7 @@ namespace CinemaTicketSystem.Models
         public DateTime BookingDate { get; set; }
 
         public string Status { get; set; } = "Confirmed";
+
+        public ICollection<Seat> Seats { get; set; } = new List<Seat>();
     }
 }

@@ -83,7 +83,7 @@ namespace CinemaTicketSystem.Controllers
                 var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
                 if (isAdmin)
                 {
-                    return RedirectToAction("Index", "Admin");
+                    return RedirectToAction("Index", "Movie");
                 }
                 return RedirectToAction("Index", "Home");
             }

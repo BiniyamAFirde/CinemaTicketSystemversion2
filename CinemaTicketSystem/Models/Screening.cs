@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -27,12 +28,11 @@ namespace CinemaTicketSystem.Models
         public int TotalSeats { get; set; }
 
         [Required]
-        public int AvailableSeats { get; set; }
-
-        [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal TicketPrice { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public ICollection<Seat> Seats { get; set; } = new List<Seat>();
     }
 }
