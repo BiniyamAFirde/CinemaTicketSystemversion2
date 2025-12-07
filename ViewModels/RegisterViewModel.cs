@@ -1,10 +1,29 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CinemaTicketSystem.ViewModels
 {
     public class RegisterViewModel
     {
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm Password")]
+        [Compare("Password", ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
         [Required]
         [StringLength(100)]
         [Display(Name = "First Name")]
@@ -15,12 +34,6 @@ namespace CinemaTicketSystem.ViewModels
         [Display(Name = "Last Name")]
         public string LastName { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = string.Empty;
-
-
         [Phone]
         [Display(Name = "Phone Number")]
         public string? PhoneNumber { get; set; }
@@ -29,15 +42,9 @@ namespace CinemaTicketSystem.ViewModels
         [Display(Name = "Date of Birth")]
         public DateTime? DateOfBirth { get; set; }
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; } = string.Empty;
+        [Display(Name = "Role")]
+        public string Role { get; set; } = "User";
 
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; } = string.Empty;
+        public List<SelectListItem>? AvailableRoles { get; set; }
     }
 }

@@ -32,7 +32,7 @@ namespace CinemaTicketSystem.Models
         public string Status { get; set; } = "Confirmed";
 
         [Timestamp]
-        public byte[]? Version { get; set; }
+        public DateTime? Version { get; set; }
 
         public ICollection<Seat> Seats { get; set; } = new List<Seat>();
     }

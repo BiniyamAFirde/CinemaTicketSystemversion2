@@ -1,6 +1,6 @@
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 
 namespace CinemaTicketSystem.Models
 {
@@ -9,8 +9,8 @@ namespace CinemaTicketSystem.Models
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public DateTime? DateOfBirth { get; set; }
-
+        
         [Timestamp]
-        public byte[]? Version { get; set; }
+        public byte[]? RowVersion { get; set; }  // Concurrency token
     }
 }

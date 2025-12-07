@@ -47,6 +47,9 @@ namespace CinemaTicketSystem.Controllers
                 
                 if (result.Succeeded)
                 {
+                    // Add user to default "User" role
+                    await _userManager.AddToRoleAsync(user, "User");
+                    
                     // Optionally sign in the user automatically after registration
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
@@ -72,32 +75,32 @@ namespace CinemaTicketSystem.Controllers
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
-        {
-        // Find user by email
-        var user = await _userManager.FindByEmailAsync(model.Email);
-        
-            if (user != null && user.UserName != null)
             {
-            // Sign in using username (not email)
-            var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
-            
-            if (result.Succeeded)
-            {
-                // Check if user is admin
-                var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
-                if (isAdmin)
+                // Find user by email
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                
+                if (user != null && user.UserName != null)
                 {
-                    return RedirectToAction("Index", "Screening");
+                    // Sign in using username (not email)
+                    var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
+                    
+                    if (result.Succeeded)
+                    {
+                        // Check if user is admin
+                        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+                        if (isAdmin)
+                        {
+                            return RedirectToAction("Index", "Screening");
+                        }
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
-                return RedirectToAction("Index", "Home");
+                
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
             }
+            
+            return View(model);
         }
-        
-        ModelState.AddModelError(string.Empty, "Invalid email or password.");
-    }
-    
-    return View(model);
-}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -107,83 +110,119 @@ namespace CinemaTicketSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-    [HttpGet]
-    public async Task<IActionResult> Profile()
-    {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            return NotFound();
-        }
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
 
-        var model = new ProfileViewModel
-        {
-            Email = user.Email ?? string.Empty,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            PhoneNumber = user.PhoneNumber,
-            DateOfBirth = user.DateOfBirth
-        };
+            var model = new ProfileViewModel
+            {
+                Email = user.Email ?? string.Empty,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                PhoneNumber = user.PhoneNumber,
+                DateOfBirth = user.DateOfBirth,
+                RowVersion = user.RowVersion  // ✅ Changed from Version to RowVersion
+            };
 
-        return View(model);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Profile(ProfileViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
             return View(model);
         }
 
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(ProfileViewModel model)
         {
-            return NotFound();
+            // Remove Email from validation since it's disabled
+            ModelState.Remove("Email");
+            
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Get the current logged-in user
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return NotFound();
+            }
+
+            // Load the user from context for tracking
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Set original RowVersion for concurrency check
+            _context.Entry(user).Property(u => u.RowVersion).OriginalValue = model.RowVersion;
+
+            // Update user properties
+            user.FirstName = model.FirstName ?? string.Empty;
+            user.LastName = model.LastName ?? string.Empty;
+            user.PhoneNumber = model.PhoneNumber;
+            user.DateOfBirth = model.DateOfBirth;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                await _signInManager.RefreshSignInAsync(user);
+                
+                TempData["SuccessMessage"] = "Profile updated successfully!";
+                return RedirectToAction("Profile");
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                var entry = ex.Entries.Single();
+                var databaseValues = await entry.GetDatabaseValuesAsync();
+
+                if (databaseValues == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Your profile was deleted by an administrator.");
+                }
+                else
+                {
+                    var databaseUser = (ApplicationUser)databaseValues.ToObject();
+                    ModelState.AddModelError(string.Empty, "Your profile has been modified. Please review the current values and try again.");
+                    
+                    // Reload current database values
+                    model.FirstName = databaseUser.FirstName ?? string.Empty;
+                    model.LastName = databaseUser.LastName ?? string.Empty;
+                    model.PhoneNumber = databaseUser.PhoneNumber;
+                    model.DateOfBirth = databaseUser.DateOfBirth;
+                    model.RowVersion = databaseUser.RowVersion;
+                }
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"An unexpected error occurred: {ex.Message}");
+                return View(model);
+            }
         }
 
-        user.FirstName = model.FirstName;
-        user.LastName = model.LastName;
-        user.PhoneNumber = model.PhoneNumber;
-        user.DateOfBirth = model.DateOfBirth;
-
-        var result = await _userManager.UpdateAsync(user);
-
-        if (result.Succeeded)
+        [HttpGet]
+        public async Task<IActionResult> Bookings()
         {
-            // Refresh the security principal to reflect changes
-            await _signInManager.RefreshSignInAsync(user);
-            TempData["SuccessMessage"] = "Profile updated successfully!";
-            return RedirectToAction("Profile");
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var bookings = await _context.Bookings
+                .Where(b => b.UserId == user.Id)
+                .Include(b => b.Screening)
+                .ThenInclude(s => s!.Movie)
+                .Include(b => b.Seats)
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+
+            return View(bookings);
         }
-
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
-
-        return View(model);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Bookings()
-    {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
-        var bookings = await _context.Bookings
-            .Where(b => b.UserId == user.Id)
-            .Include(b => b.Screening)
-            .ThenInclude(s => s!.Movie)
-            .Include(b => b.Seats)
-            .OrderByDescending(b => b.BookingDate)
-            .ToListAsync();
-
-        return View(bookings);
-    }
     }
 }

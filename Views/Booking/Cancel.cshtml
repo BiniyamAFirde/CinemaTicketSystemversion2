@@ -40,7 +40,7 @@
 
                     <form asp-action="Cancel">
                         <input type="hidden" asp-for="Id" />
-                        <input type="hidden" asp-for="Version" />
+                        <input type="hidden" name="version" value="@Model.Version?.ToString("o")" />
                         <button type="submit" class="btn btn-danger">Yes, Cancel Booking</button>
                         <a href="@Url.Action("Bookings", "Account")" class="btn btn-secondary">No, Keep Booking</a>
                     </form>

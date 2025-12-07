@@ -227,7 +227,7 @@ namespace CinemaTicketSystem.Controllers
         [HttpPost]
         [ActionName("Cancel")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelConfirmed(int id, byte[] version)
+        public async Task<IActionResult> CancelConfirmed(int id, DateTime? version)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)

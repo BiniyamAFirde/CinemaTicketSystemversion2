@@ -20,4 +20,6 @@ obj/
 appsettings.json
 appsettings.Development.json
 
+push.sh
+
 EOF

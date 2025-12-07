@@ -122,6 +122,28 @@ async Task SeedData(ApplicationDbContext context, UserManager<ApplicationUser> u
             }
         }
 
+        // Create new admin user admin2@cinema.com
+        var admin2Email = "admin2@cinema.com";
+        if (await userManager.FindByEmailAsync(admin2Email) == null)
+        {
+            var admin2User = new ApplicationUser
+            {
+                UserName = admin2Email,
+                Email = admin2Email,
+                FirstName = "Admin2",
+                LastName = "User",
+                EmailConfirmed = true,
+                PhoneNumber = "+1234567891",
+                DateOfBirth = new DateTime(1991, 2, 2)
+            };
+
+            var result = await userManager.CreateAsync(admin2User, "123Admin@");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(admin2User, "Admin");
+            }
+        }
+
         // Sample movies
         if (!context.Movies.Any())
         {
