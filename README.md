@@ -431,7 +431,7 @@ This project is developed for academic purposes as part of the Graphical User In
 
 For questions, suggestions, or issues:
 
-**Email:** [yonatanawlachew1@gmail.com](mailto:yonatanawlachew1@gmail.com)
+**Email:** [biniyam2awlachew@gmail.com and yonatanawlachew1@gmail.com](mailto:biniyam2awlachew@gmail.com and yonatanawlachew1@gmail.com)
 
 ---
 
