@@ -136,32 +136,20 @@ namespace CinemaTicketSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(ProfileViewModel model)
         {
-            // Remove Email from validation since it's disabled
-            ModelState.Remove("Email");
-            
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            // Get the current logged-in user
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return NotFound();
-            }
-
-            // Load the user from context for tracking
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (user == null)
             {
                 return NotFound();
             }
 
-            // Set original RowVersion for concurrency check
+            // ✅ Changed from "Version" to using strongly-typed RowVersion
             _context.Entry(user).Property(u => u.RowVersion).OriginalValue = model.RowVersion;
 
-            // Update user properties
             user.FirstName = model.FirstName ?? string.Empty;
             user.LastName = model.LastName ?? string.Empty;
             user.PhoneNumber = model.PhoneNumber;
@@ -187,20 +175,19 @@ namespace CinemaTicketSystem.Controllers
                 else
                 {
                     var databaseUser = (ApplicationUser)databaseValues.ToObject();
-                    ModelState.AddModelError(string.Empty, "Your profile has been modified. Please review the current values and try again.");
+                    ModelState.AddModelError(string.Empty, "Your profile has been modified by another user. Your changes were not applied. Please review the updated values and save again.");
                     
-                    // Reload current database values
                     model.FirstName = databaseUser.FirstName ?? string.Empty;
                     model.LastName = databaseUser.LastName ?? string.Empty;
                     model.PhoneNumber = databaseUser.PhoneNumber;
                     model.DateOfBirth = databaseUser.DateOfBirth;
-                    model.RowVersion = databaseUser.RowVersion;
+                    model.RowVersion = databaseUser.RowVersion;  // ✅ Changed from Version to RowVersion
                 }
                 return View(model);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, $"An unexpected error occurred: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Could not save your profile.");
                 return View(model);
             }
         }

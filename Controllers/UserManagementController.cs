@@ -98,10 +98,10 @@ namespace CinemaTicketSystem.Controllers
                 return NotFound();
             }
 
-            // Set the original RowVersion for concurrency check
+            
             _context.Entry(user).Property(u => u.RowVersion).OriginalValue = model.RowVersion;
 
-            // Update user properties
+           
             user.FirstName = model.FirstName ?? string.Empty;
             user.LastName = model.LastName ?? string.Empty;
             user.PhoneNumber = model.PhoneNumber ?? string.Empty;
@@ -111,7 +111,7 @@ namespace CinemaTicketSystem.Controllers
             {
                 await _context.SaveChangesAsync();
 
-                // Update roles after successful user update
+             
                 var userRoles = await _userManager.GetRolesAsync(user);
                 var newRoles = model.Roles ?? new List<string>();
 

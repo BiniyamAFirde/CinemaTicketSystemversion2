@@ -11,6 +11,6 @@ namespace CinemaTicketSystem.Models
         public DateTime? DateOfBirth { get; set; }
         
         [Timestamp]
-        public byte[]? RowVersion { get; set; }  // Concurrency token
+        public byte[]? RowVersion { get; set; }  
     }
 }
